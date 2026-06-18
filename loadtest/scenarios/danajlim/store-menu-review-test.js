@@ -94,7 +94,7 @@ export default function storeMenuReview() {
     // 응답: ApiResponse<SliceResponse<StoreSearchResponse>> → data.content[].id
     const data = dataOf(res);
     if (data && Array.isArray(data.content) && data.content.length > 0) {
-      storeId = data.content[0].id;
+      storeId = data.content[__ITER % data.content.length].id;
     }
   });
   think();

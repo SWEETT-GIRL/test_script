@@ -14,10 +14,9 @@
 //   6. 메뉴 리스트 조회              → GET /stores/{storeId}/menus (인기 menuId 체이닝)
 //   7. 인기 메뉴들 메뉴 화면 진입 → GET /menus/{menuId} (상세)
 //                                  + GET /menus/{menuId}/reviews/summary
-//                                  + GET /menus/{menuId}/reviews (미리보기 size 2)
+//                                  + GET /menus/{menuId}/reviews (size 20)
 // [주의사항]    전부 GET(읽기 전용) — 부수효과 없음.
-//               FE 메뉴 화면(app/menu/[id].tsx)은 메뉴 상세 + 리뷰 요약 + 리뷰 미리보기(size 2)를
-//               함께 호출한다 → 그대로 모델링. 전체 리뷰 리스트(size 20)는 store-menu-review.js 쪽.
+//               FE 메뉴 화면(app/menu/[id].tsx)은 메뉴 상세 + 리뷰 요약 + 리뷰 리스트를 함께 호출한다.
 //
 // 단계 → 엔드포인트 매핑
 // | # | 단계                  | 포함/제외   | HTTP | name 태그                            | 인증 | 비고                                   |
@@ -30,7 +29,7 @@
 // | 6 | 메뉴 리스트 조회      | 포함        | GET  | GET /stores/{storeId}/menus          | Y    | 5번 storeId, 인기 menuId 목록 체이닝   |
 // | 7 | 인기 메뉴 상세        | 포함        | GET  | GET /menus/{menuId}                  | Y    | 6번 상위 N개 menuId 루프 (메뉴 화면)   |
 // | 7 | 인기 메뉴 리뷰 요약   | 포함        | GET  | GET /menus/{menuId}/reviews/summary  | Y    | previewSize=2                          |
-// | 7 | 인기 메뉴 리뷰 리스트 | 포함        | GET  | GET /menus/{menuId}/reviews          | Y    | sort=recommended, page=0, size=2 (미리보기) |
+// | 7 | 인기 메뉴 리뷰 리스트 | 포함        | GET  | GET /menus/{menuId}/reviews          | Y    | sort=recommended, page=0, size=20     |
 
 import { group } from 'k6';
 import { getOptions } from '../../lib/config.js';
@@ -83,7 +82,7 @@ export default function storeDetailBread() {
     // 응답: ApiResponse<SliceResponse<StoreSearchResponse>> → data.content[].id
     const data = dataOf(res);
     if (data && Array.isArray(data.content) && data.content.length > 0) {
-      storeId = data.content[0].id;
+      storeId = data.content[__ITER % data.content.length].id;
     }
   });
   think();
@@ -139,10 +138,10 @@ export default function storeDetailBread() {
       });
       checkOk(summaryRes, 'GET /menus/{menuId}/reviews/summary');
 
-      // 5-3. 리뷰 리스트 — 메뉴 화면 인라인 미리보기(FE useMenuReviews size:2)
+      // 5-3. 리뷰 리스트
       const listRes = apiGet(`/menus/${menuId}/reviews`, {
         token,
-        params: { sort: 'recommended', photoOnly: false, page: 0, size: 2 },
+        params: { sort: 'recommended', photoOnly: false, page: 0, size: 20 },
         name: 'GET /menus/{menuId}/reviews',
       });
       checkOk(listRes, 'GET /menus/{menuId}/reviews');
