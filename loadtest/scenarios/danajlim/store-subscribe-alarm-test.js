@@ -1,7 +1,7 @@
-// scenarios/danajlim/store-subscribe-alarm.js
+// scenarios/danajlim/store-subscribe-alarm-test.js
 //
 // [담당자]      danajlim
-// [slug]        store-subscribe-alarm
+// [slug]        store-subscribe-alarm-test
 // [scenarioName] store_subscribe_alarm
 // [목적]        인스타에서 본 빵집을 검색해 상세로 들어가 '빵알람'을 설정하는 흐름
 //               ("이 빵집 근처 가면 알려줘")의 성능 확인. 검색·상세(읽기) + 구독(쓰기) 혼합 부하.
@@ -114,14 +114,14 @@ export default function storeSubscribeAlarm() {
 // 실행 명령
 // ----------------------------------------------------------------------------
 // # 기본 실행
-// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-subscribe-alarm.js
+// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-subscribe-alarm-test.js
 //
 // # Prometheus remote write (Grafana 연동)
 // BASE_URL=http://localhost:8080 \
 // K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write \
 //   k6 run -o experimental-prometheus-rw \
 //   --tag testid=$(date +%Y%m%d-%H%M%S) \
-//   scenarios/danajlim/store-subscribe-alarm.js
+//   scenarios/danajlim/store-subscribe-alarm-test.js
 //
 // # 저강도 스모크 (RPS 낮춤)
-// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-subscribe-alarm.js
+// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-subscribe-alarm-test.js

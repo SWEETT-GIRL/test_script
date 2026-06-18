@@ -1,7 +1,7 @@
-// scenarios/danajlim/store-report-hours.js
+// scenarios/danajlim/store-report-hours-test.js
 //
 // [담당자]      danajlim
-// [slug]        store-report-hours
+// [slug]        store-report-hours-test
 // [scenarioName] store_report_hours
 // [목적]        홈에서 가게를 검색해 상세로 들어가, '가게 정보 수정 제안'에서 영업시간 수정을
 //               제보하는 흐름("이 가게 영업시간 틀렸어요")의 성능 확인. 읽기(검색·상세) + 쓰기(제보) 혼합.
@@ -14,7 +14,7 @@
 //   6. 가게 정보 수정 제안       (비-API → sleep, 수정 항목 선택 화면)
 //   7. 영업시간 수정 요청        → POST /stores/{storeId}/reports/business-hours (부수효과·201)
 // [주의사항]    7 은 쓰기(부수효과). loadtest 전용 토큰(pickToken)만 사용.
-//               · 응답이 201 Created 이므로 checkOk(200 전용) 대신 lib/checks.js 의 checkCreated 사용.
+//               · 응답이 201 Created 이지만 checkOk 가 2xx(200·201) 통과라 그대로 사용.
 //               · 멱등 아님(append-only): 호출마다 새 제보(ContributionReport) row 생성, 409 없음.
 //                 1000~2000 RPS 면 제보 row 가 대량 누적된다(삭제 API 없음 → loadtest DB 정리 별도 필요).
 //               · 생성 시 adminReportNotificationPublisher 가 어드민 신규 제보 알림을 발행한다.
@@ -38,7 +38,7 @@ import { getOptions } from '../../lib/config.js';
 import { pickToken } from '../../lib/auth.js';
 import { pickLocation, pickQuery } from '../../lib/data.js';
 import { apiGet, apiPost, dataOf } from '../../lib/http.js';
-import { checkOk, checkCreated } from '../../lib/checks.js';
+import { checkOk } from '../../lib/checks.js';
 import { think } from '../../lib/think.js';
 
 export const options = getOptions('store_report_hours');
@@ -119,22 +119,22 @@ export default function storeReportHours() {
       body: REPORT_BODY,
       name: 'POST /stores/{storeId}/reports/business-hours',
     });
-    // ⚠ 201 Created 반환 → checkOk(200) 대신 checkCreated 사용
-    checkCreated(res, 'POST /stores/{storeId}/reports/business-hours');
+    // 201 Created 반환 → checkOk 가 2xx 통과
+    checkOk(res, 'POST /stores/{storeId}/reports/business-hours');
   });
 }
 
 // 실행 명령
 // ----------------------------------------------------------------------------
 // # 기본 실행
-// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-report-hours.js
+// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-report-hours-test.js
 //
 // # Prometheus remote write (Grafana 연동)
 // BASE_URL=http://localhost:8080 \
 // K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write \
 //   k6 run -o experimental-prometheus-rw \
 //   --tag testid=$(date +%Y%m%d-%H%M%S) \
-//   scenarios/danajlim/store-report-hours.js
+//   scenarios/danajlim/store-report-hours-test.js
 //
 // # 저강도 스모크 (RPS 낮춤)
-// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-report-hours.js
+// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-report-hours-test.js

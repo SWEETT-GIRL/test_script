@@ -1,7 +1,7 @@
-// scenarios/danajlim/store-detail-bread.js
+// scenarios/danajlim/store-detail-bread-test.js
 //
 // [담당자]      danajlim
-// [slug]        store-detail-bread
+// [slug]        store-detail-bread-test
 // [scenarioName] store_detail_bread
 // [목적]        홈에서 특정 가게를 검색해 가게 상세·메뉴 리스트를 보고,
 //               인기 메뉴들의 리뷰까지 확인하는 흐름("이 가게 무슨 빵이 유명한지")의 성능 확인
@@ -153,14 +153,14 @@ export default function storeDetailBread() {
 // 실행 명령
 // ----------------------------------------------------------------------------
 // # 기본 실행
-// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-detail-bread.js
+// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-detail-bread-test.js
 //
 // # Prometheus remote write (Grafana 연동)
 // BASE_URL=http://localhost:8080 \
 // K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write \
 //   k6 run -o experimental-prometheus-rw \
 //   --tag testid=$(date +%Y%m%d-%H%M%S) \
-//   scenarios/danajlim/store-detail-bread.js
+//   scenarios/danajlim/store-detail-bread-test.js
 //
 // # 저강도 스모크 (RPS 낮춤)
-// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-detail-bread.js
+// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-detail-bread-test.js

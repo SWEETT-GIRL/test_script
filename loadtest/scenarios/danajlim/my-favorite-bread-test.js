@@ -1,7 +1,7 @@
-// scenarios/danajlim/my-favorite-bread.js
+// scenarios/danajlim/my-favorite-bread-test.js
 //
 // [담당자]      danajlim
-// [slug]        my-favorite-bread
+// [slug]        my-favorite-bread-test
 // [scenarioName] my_favorite_bread
 // [목적]        MY탭에서 '빵 취향'을 열어 현재 취향을 보고, 새로운 빵을 추가해 저장하는 흐름
 //               ("요즘은 이게 맛있더라")의 성능 확인. 읽기(홈·MY·취향) + 취향 저장(쓰기) 혼합 부하.
@@ -112,14 +112,14 @@ export default function myFavoriteBread() {
 // 실행 명령
 // ----------------------------------------------------------------------------
 // # 기본 실행
-// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/my-favorite-bread.js
+// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/my-favorite-bread-test.js
 //
 // # Prometheus remote write (Grafana 연동)
 // BASE_URL=http://localhost:8080 \
 // K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write \
 //   k6 run -o experimental-prometheus-rw \
 //   --tag testid=$(date +%Y%m%d-%H%M%S) \
-//   scenarios/danajlim/my-favorite-bread.js
+//   scenarios/danajlim/my-favorite-bread-test.js
 //
 // # 저강도 스모크 (RPS 낮춤)
-// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/my-favorite-bread.js
+// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/my-favorite-bread-test.js
