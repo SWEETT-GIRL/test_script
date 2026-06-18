@@ -117,6 +117,33 @@ const server = http.createServer((req, res) => {
     });
   }
 
+  // 네이버 지역검색 — BE 의 가게 추가 제보(/stores/add-reports/naver/search)가 부르는 외부 의존.
+  // BE(NaverLocalSearchResponse)는 mapx/mapy(=좌표×10^7 문자열)를 ÷10^7 해서 lat/lng 로 쓰고,
+  // link 의 place id(정규식 (?:code=|/place/)(\d+)) 를 naverPlaceId 로 추출한다.
+  if (path.startsWith('/v1/search/local')) {
+    const query = url.searchParams.get('query') || 'mock';
+    const display = Math.min(Math.max(parseInt(url.searchParams.get('display'), 10) || 10, 1), 30);
+    const baseLon = 127.0557;
+    const baseLat = 37.5446;
+    return json(res, 200, {
+      items: Array.from({ length: display }).map((_, i) => {
+        const r = REGION_POOL[i % REGION_POOL.length]; // 항목마다 다른 구/동
+        const lon = baseLon + i * 0.0017; // 항목마다 좌표 흩기(유효 double)
+        const lat = baseLat + i * 0.0013;
+        return {
+          title: `${query} 베이커리 ${i}`, // BE 가 <b> 태그 제거하므로 평문이어도 됨
+          link: `https://map.naver.com/p/place/${1000000 + i}`, // → naverPlaceId 1000000+i
+          category: '음식점>베이커리',
+          telephone: `02-000-${String(1000 + i).slice(-4)}`,
+          address: `${r.gu} ${r.dong} ${i + 1}-${i + 1}`,
+          roadAddress: `${r.gu} ${r.dong}로 ${i + 1}`,
+          mapx: String(Math.round(lon * 1e7)), // 좌표 × 10^7
+          mapy: String(Math.round(lat * 1e7)),
+        };
+      }),
+    });
+  }
+
   // 주소 검색 (행정/도로명) — BE 의 /address/search 가 호출하는 외부 의존 대체
   if (path.startsWith('/address/search') || path.startsWith('/v2/local/search/address')) {
     return json(res, 200, {
