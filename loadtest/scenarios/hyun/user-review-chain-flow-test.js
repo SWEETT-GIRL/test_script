@@ -55,7 +55,7 @@ export default function userReviewChainFlow() {
     checkOk(res, 'GET /trend/nearby');
     const data = dataOf(res);
     if (data && Array.isArray(data.hotStores) && data.hotStores.length > 0) {
-      storeId = data.hotStores[0].storeId;
+      storeId = data.hotStores[__ITER % data.hotStores.length].storeId;
     }
   });
   think();
