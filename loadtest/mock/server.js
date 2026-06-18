@@ -18,6 +18,46 @@ function json(res, status, body) {
   res.end(payload);
 }
 
+// 카카오 좌표→행정구역 매핑용 (구, 동) 풀. 모두 유효한 Region3rd '구_동' 이며
+// 빵집/트렌드 데이터가 있는 지역 위주. BE 는 coord2address(구) + coord2regioncode(동)
+// 를 합쳐 Region3rd.valueOf("구_동") 을 만들므로 두 응답이 같은 쌍을 줘야 한다.
+// regions.csv(Region3rd 전체)를 시작 시 읽어 (구, 동) 풀을 구성한다.
+// '구_동' 을 '_' 기준으로 분리하고, '_전체'(동 아님)는 제외 → 약 2,400개.
+const fs = require('fs');
+const path = require('path');
+const REGIONS_CSV = process.env.REGIONS_CSV || path.join(__dirname, '..', 'data', 'regions.csv');
+
+function loadRegionPool() {
+  const fallback = [{ gu: '강남구', dong: '역삼동' }];
+  try {
+    const lines = fs.readFileSync(REGIONS_CSV, 'utf8').split(/\r?\n/).slice(1); // 헤더 제외
+    const pool = [];
+    for (const line of lines) {
+      const v = line.trim();
+      const us = v.indexOf('_');
+      if (us <= 0) continue;
+      const dong = v.slice(us + 1);
+      if (!dong || dong === '전체') continue; // 동/읍/면 만 (BE endsWithDongSuffix 통과용)
+      pool.push({ gu: v.slice(0, us), dong });
+    }
+    return pool.length ? pool : fallback;
+  } catch (e) {
+    console.warn(`[mock] regions.csv 로드 실패(${REGIONS_CSV}) → 기본 풀 사용: ${e.message}`);
+    return fallback;
+  }
+}
+
+const REGION_POOL = loadRegionPool();
+
+// 좌표(x=lon, y=lat)를 결정적으로 풀의 한 (구,동) 으로 매핑. 같은 좌표면 항상 같은 결과.
+function pickRegion(url) {
+  const x = parseFloat(url.searchParams.get('x'));
+  const y = parseFloat(url.searchParams.get('y'));
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return REGION_POOL[0];
+  const h = Math.abs(Math.round(x * 1000) + Math.round(y * 1000));
+  return REGION_POOL[h % REGION_POOL.length];
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const path = url.pathname;
@@ -42,6 +82,38 @@ const server = http.createServer((req, res) => {
         category_group_code: 'FD6',
       })),
       meta: { total_count: 5, pageable_count: 5, is_end: true },
+    });
+  }
+
+  // 카카오 좌표→주소 (coord2address) — trend/nearby 가 여기서 region2nd(구) 를 뽑는다.
+  // addressName 의 두 번째 토큰이 구가 되도록 "시도 구 동" 형태로 준다.
+  if (path.startsWith('/v2/local/geo/coord2address')) {
+    const r = pickRegion(url);
+    return json(res, 200, {
+      documents: [
+        {
+          road_address: { region_3depth_name: r.dong },
+          address: {
+            address_name: `대한민국 ${r.gu} ${r.dong}`,
+            region_2depth_name: r.gu,
+            region_3depth_name: r.dong,
+          },
+        },
+      ],
+      meta: { total_count: 1 },
+    });
+  }
+
+  // 카카오 좌표→행정구역 (coord2regioncode) — trend/nearby 가 여기서 region3rd(동) 를 뽑는다.
+  // 같은 좌표면 coord2address 와 동일한 (구,동) → Region3rd "구_동" 매핑이 일관된다.
+  if (path.startsWith('/v2/local/geo/coord2regioncode')) {
+    const r = pickRegion(url);
+    return json(res, 200, {
+      documents: [
+        { region_type: 'B', region_2depth_name: r.gu, region_3depth_name: r.dong },
+        { region_type: 'H', region_2depth_name: r.gu, region_3depth_name: r.dong },
+      ],
+      meta: { total_count: 2 },
     });
   }
 

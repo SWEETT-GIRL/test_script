@@ -2,7 +2,7 @@
 // 모든 시나리오가 공유하는 부하 프로파일 / threshold / tag 를 한 곳에서 고정한다.
 // 시나리오 작성자는 이 파일을 수정하지 않고 getOptions(scenarioName) 만 호출한다.
 
-export const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+export const BASE_URL = __ENV.BASE_URL || 'https://bbang-ggut.site';
 
 // LOAD_LEVEL: 'smoke' | 'full'(기본)
 //   - full : 1000 → 1500 → 2000 RPS 점진 증가 (목표 부하)

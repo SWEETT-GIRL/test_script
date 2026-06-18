@@ -23,6 +23,8 @@ MOCK_PORT=9900 node mock/server.js
 |------|-----------|------|
 | `GET /health` | - | `{ status: "ok" }` |
 | `GET /v2/local/search/keyword?query=` | 카카오 로컬 키워드 검색 | 가짜 장소 5건 |
+| `GET /v2/local/geo/coord2address?x&y` | 카카오 좌표→주소 (trend/nearby) | `regions.csv` 풀에서 좌표 해시로 고른 `구/동` |
+| `GET /v2/local/geo/coord2regioncode?x&y` | 카카오 좌표→행정구역 (trend/nearby) | 위와 **동일 좌표면 동일** `구/동` (B·H 타입) |
 | `GET /v2/local/search/address`, `GET /address/search` | 주소 검색 | 가짜 주소 1건 |
 | `POST /fcm/send`, `*/messages:send` | FCM 발송 | 가짜 message id |
 | `*presigned*`, `POST /s3/presign` | S3 presigned URL | 가짜 presign URL |
