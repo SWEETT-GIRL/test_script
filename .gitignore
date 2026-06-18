@@ -1,0 +1,14 @@
+# 실토큰 — 절대 커밋 금지 (sample 만 커밋)
+loadtest/data/tokens.csv
+
+# k6 결과물
+*.json.summary
+summary.json
+k6-results/
+
+# node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store

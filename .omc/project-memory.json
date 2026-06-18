@@ -1,0 +1,119 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1781749106008,
+  "projectRoot": "/Users/gimnayeong/Desktop/soma/projects/bbang_ggut/BE/test_script",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {},
+  "hotPaths": [
+    {
+      "path": "loadtest/lib/http.js",
+      "accessCount": 2,
+      "lastAccessed": 1781749891288,
+      "type": "file"
+    },
+    {
+      "path": "CLAUDE.md",
+      "accessCount": 1,
+      "lastAccessed": 1781749537311,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/lib/config.js",
+      "accessCount": 1,
+      "lastAccessed": 1781749845576,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/lib/auth.js",
+      "accessCount": 1,
+      "lastAccessed": 1781749866632,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/lib/checks.js",
+      "accessCount": 1,
+      "lastAccessed": 1781749908956,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/lib/think.js",
+      "accessCount": 1,
+      "lastAccessed": 1781749921140,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/lib/data.js",
+      "accessCount": 1,
+      "lastAccessed": 1781749947000,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/data/tokens.sample.csv",
+      "accessCount": 1,
+      "lastAccessed": 1781749959608,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/data/locations.csv",
+      "accessCount": 1,
+      "lastAccessed": 1781749972958,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/data/search-queries.csv",
+      "accessCount": 1,
+      "lastAccessed": 1781749979614,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/scenarios/_example/ranking-nearby.js",
+      "accessCount": 1,
+      "lastAccessed": 1781750018502,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/mock/server.js",
+      "accessCount": 1,
+      "lastAccessed": 1781750056540,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/mock/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1781750091116,
+      "type": "file"
+    },
+    {
+      "path": "loadtest/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1781750135808,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
