@@ -206,8 +206,8 @@ LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/{{담당자}}/{
 - `POST /menus/{menuId}/like` · `DELETE /menus/{menuId}/like` — 메뉴 좋아요 (인증, 부수효과)
 
 **리뷰**
-- `GET /menus/{menuId}/reviews/summary?sort&photoOnly&previewSize` — 요약(미리보기, previewSize=2)
-- `GET /menus/{menuId}/reviews?sort&page&size` — 리스트 (sort: recent|helpful|photo, size=20)
+- `GET /menus/{menuId}/reviews/summary?sort&photoOnly&previewSize` — 요약(미리보기, sort: recent|recommended, previewSize=2)
+- `GET /menus/{menuId}/reviews?sort&photoOnly&page&size` — 리스트 (sort: recent|recommended, photoOnly=bool, size=20)
 - `GET /reviews/{reviewId}` — 리뷰 상세
 - `GET /users/{memberId}/reviews?page&size` — 특정 사용자 리뷰 (memberId = 리뷰 상세 응답에서)
 - `GET /users/me/reviews` — 내가 쓴 리뷰 (인증)
