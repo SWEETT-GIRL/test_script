@@ -1,5 +1,5 @@
 // lib/checks.js
-// 응답 검증을 한 줄로 표준화한다: http status && body.success === true
+// 응답 검증을 한 줄로 표준화한다: http 2xx && body.success === true
 
 import { check } from 'k6';
 
@@ -13,28 +13,16 @@ function isSuccess(r) {
 }
 
 /**
- * http 200 && body.success === true 검증(조회·200 응답 API 전용).
+ * http 2xx && body.success === true 검증(조회·생성·제보 공통).
+ * 200(조회·좋아요 등)과 201 Created(리뷰 작성·제보 등)을 모두 통과시킨다.
+ * → 엔드포인트별 200/201 구분을 호출부에서 신경 쓸 필요 없음.
  * @param {object} res k6 response
  * @param {string} name check 라벨(보통 name 태그와 동일)
  * @returns {boolean} 통과 여부
  */
 export function checkOk(res, name) {
   return check(res, {
-    [`${name} status 200`]: (r) => r.status === 200,
-    [`${name} success true`]: isSuccess,
-  });
-}
-
-/**
- * http 201 Created && body.success === true 검증(생성/제보 등 201 응답 API 전용).
- * 예: POST /menus/{menuId}/reviews, POST /stores/{storeId}/reports/business-hours.
- * @param {object} res k6 response
- * @param {string} name check 라벨(보통 name 태그와 동일)
- * @returns {boolean} 통과 여부
- */
-export function checkCreated(res, name) {
-  return check(res, {
-    [`${name} status 201`]: (r) => r.status === 201,
+    [`${name} status 2xx`]: (r) => r.status >= 200 && r.status < 300,
     [`${name} success true`]: isSuccess,
   });
 }

@@ -1,7 +1,7 @@
-// scenarios/danajlim/store-menu-review.js
+// scenarios/danajlim/store-menu-review-test.js
 //
 // [담당자]      danajlim
-// [slug]        store-menu-review
+// [slug]        store-menu-review-test
 // [scenarioName] store_menu_review
 // [목적]        홈에서 특정 가게를 검색해 상세·메뉴 리스트를 보고, '명란마요소금빵' 같은
 //               특정 메뉴 1개를 골라 메뉴 상세와 그 메뉴의 리뷰까지 확인하는 흐름
@@ -156,14 +156,14 @@ export default function storeMenuReview() {
 // 실행 명령
 // ----------------------------------------------------------------------------
 // # 기본 실행
-// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-menu-review.js
+// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-menu-review-test.js
 //
 // # Prometheus remote write (Grafana 연동)
 // BASE_URL=http://localhost:8080 \
 // K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write \
 //   k6 run -o experimental-prometheus-rw \
 //   --tag testid=$(date +%Y%m%d-%H%M%S) \
-//   scenarios/danajlim/store-menu-review.js
+//   scenarios/danajlim/store-menu-review-test.js
 //
 // # 저강도 스모크 (RPS 낮춤)
-// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-menu-review.js
+// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-menu-review-test.js

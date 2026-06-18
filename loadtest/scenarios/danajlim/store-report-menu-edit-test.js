@@ -1,7 +1,7 @@
-// scenarios/danajlim/store-report-menu-edit.js
+// scenarios/danajlim/store-report-menu-edit-test.js
 //
 // [담당자]      danajlim
-// [slug]        store-report-menu-edit
+// [slug]        store-report-menu-edit-test
 // [scenarioName] store_report_menu_edit
 // [목적]        가게 상세에서 '가게 정보 수정 제안 → 메뉴 수정/삭제'로 들어가 특정 메뉴의
 //               가격 수정 + 사진 삭제 + 사진 추가를 제보하는 흐름("이 메뉴 가격/사진 바뀌었어요")의
@@ -23,7 +23,7 @@
 //                 GET /stores/{storeId}/menus 두 개만 부른다. 메뉴 상세(GET /menus/{menuId})는
 //                 호출하지 않는다. 삭제할 메뉴 사진 id 는 store 상세의 menuImages(각 항목에 menuId)
 //                 에서 뽑고, 현재 가격은 메뉴 목록 StoreMenuResponse.price 에서 뽑는다. → 그대로 모델링.
-//               · presigned-urls 는 200(checkOk), 최종 edit 제보는 201(checkCreated).
+//               · presigned-urls 는 200(checkOk), 최종 edit 제보는 201 — checkOk(2xx 통과).
 //               · 사진 추가 awsKey 는 presigned 응답값을 그대로 사용(체이닝). BE 가 awsKey 가
 //                 reports/stores/{storeId}/menus/{menuId}/ prefix 인지 검증(아니면 REPORT_INVALID_AWS_KEY).
 //               · S3 실제 업로드(uploadUrl PUT)는 외부 → k6 호출 안 함. FE 는 uploadToS3 로 올리지만
@@ -55,7 +55,7 @@ import { getOptions } from '../../lib/config.js';
 import { pickToken } from '../../lib/auth.js';
 import { pickLocation, pickQuery } from '../../lib/data.js';
 import { apiGet, apiPost, dataOf } from '../../lib/http.js';
-import { checkOk, checkCreated } from '../../lib/checks.js';
+import { checkOk } from '../../lib/checks.js';
 import { think } from '../../lib/think.js';
 
 export const options = getOptions('store_report_menu_edit');
@@ -187,22 +187,22 @@ export default function storeReportMenuEdit() {
       body,
       name: 'POST /menus/{menuId}/reports/edit',
     });
-    // ⚠ 201 Created 반환 → checkCreated
-    checkCreated(res, 'POST /menus/{menuId}/reports/edit');
+    // 201 Created 반환 → checkOk 가 2xx 통과
+    checkOk(res, 'POST /menus/{menuId}/reports/edit');
   });
 }
 
 // 실행 명령
 // ----------------------------------------------------------------------------
 // # 기본 실행
-// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-report-menu-edit.js
+// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-report-menu-edit-test.js
 //
 // # Prometheus remote write (Grafana 연동)
 // BASE_URL=http://localhost:8080 \
 // K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write \
 //   k6 run -o experimental-prometheus-rw \
 //   --tag testid=$(date +%Y%m%d-%H%M%S) \
-//   scenarios/danajlim/store-report-menu-edit.js
+//   scenarios/danajlim/store-report-menu-edit-test.js
 //
 // # 저강도 스모크 (RPS 낮춤)
-// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-report-menu-edit.js
+// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-report-menu-edit-test.js

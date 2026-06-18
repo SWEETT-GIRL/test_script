@@ -1,7 +1,7 @@
-// scenarios/danajlim/store-menu-filter.js
+// scenarios/danajlim/store-menu-filter-test.js
 //
 // [담당자]      danajlim
-// [slug]        store-menu-filter
+// [slug]        store-menu-filter-test
 // [scenarioName] store_menu_filter
 // [목적]        홈에서 특정 가게를 검색해 상세로 들어가, 메뉴에서 '소금빵' 카테고리만
 //               필터링해 보고 다시 전체 메뉴로 돌아오는 흐름("이 가게에서 소금빵만 보고싶어")의 성능 확인
@@ -123,14 +123,14 @@ export default function storeMenuFilter() {
 // 실행 명령
 // ----------------------------------------------------------------------------
 // # 기본 실행
-// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-menu-filter.js
+// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-menu-filter-test.js
 //
 // # Prometheus remote write (Grafana 연동)
 // BASE_URL=http://localhost:8080 \
 // K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write \
 //   k6 run -o experimental-prometheus-rw \
 //   --tag testid=$(date +%Y%m%d-%H%M%S) \
-//   scenarios/danajlim/store-menu-filter.js
+//   scenarios/danajlim/store-menu-filter-test.js
 //
 // # 저강도 스모크 (RPS 낮춤)
-// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-menu-filter.js
+// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-menu-filter-test.js

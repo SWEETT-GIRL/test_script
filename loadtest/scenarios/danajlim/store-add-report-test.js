@@ -1,7 +1,7 @@
-// scenarios/danajlim/store-add-report.js
+// scenarios/danajlim/store-add-report-test.js
 //
 // [담당자]      danajlim
-// [slug]        store-add-report
+// [slug]        store-add-report-test
 // [scenarioName] store_add_report
 // [목적]        가게를 검색했으나 결과가 없어("안 뜨네") 사용자가 직접 가게를 추가 제보하는 흐름의
 //               성능 확인. 읽기(홈·검색) + 외부 네이버 장소검색(BE→mock) + 가게추가 제보(쓰기) 혼합 부하.
@@ -26,7 +26,7 @@
 //                 바라봄(§0, 인프라 책임). k6 는 BE 만 때린다. 이미지/presigned/S3 단계는 이 흐름에 없음.
 //               · latitude/longitude(@NotNull) 는 네이버 결과(좌표 있는 첫 항목)에서 체이닝, 없으면
 //                 pickLocation() 으로 폴백(항상 non-null 보장 → 제보 단계 skip 안 됨).
-//               · 검색(GET /stores/search)·네이버검색은 200(checkOk), 제보는 201(checkCreated).
+//               · 검색·네이버검색은 200, 제보는 201 — 모두 checkOk(2xx 통과).
 //               · 생성 시 adminReportNotificationPublisher 가 어드민 알림 발행(loadtest FCM→mock).
 //                 호출마다 ContributionReport + StoreContributionReport(PENDING) row 누적 → DB 정리
 //                 (reason/ name LIKE 'loadtest-%').
@@ -47,7 +47,7 @@ import { getOptions } from '../../lib/config.js';
 import { pickToken } from '../../lib/auth.js';
 import { pickLocation, pickQuery } from '../../lib/data.js';
 import { apiGet, apiPost, dataOf } from '../../lib/http.js';
-import { checkOk, checkCreated } from '../../lib/checks.js';
+import { checkOk } from '../../lib/checks.js';
 import { think } from '../../lib/think.js';
 
 export const options = getOptions('store_add_report');
@@ -132,22 +132,22 @@ export default function storeAddReport() {
       },
       name: 'POST /stores/add-reports',
     });
-    // ⚠ 201 Created 반환 → checkCreated
-    checkCreated(res, 'POST /stores/add-reports');
+    // 201 Created 반환 → checkOk 가 2xx 통과
+    checkOk(res, 'POST /stores/add-reports');
   });
 }
 
 // 실행 명령
 // ----------------------------------------------------------------------------
 // # 기본 실행
-// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-add-report.js
+// BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-add-report-test.js
 //
 // # Prometheus remote write (Grafana 연동)
 // BASE_URL=http://localhost:8080 \
 // K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write \
 //   k6 run -o experimental-prometheus-rw \
 //   --tag testid=$(date +%Y%m%d-%H%M%S) \
-//   scenarios/danajlim/store-add-report.js
+//   scenarios/danajlim/store-add-report-test.js
 //
 // # 저강도 스모크 (RPS 낮춤)
-// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-add-report.js
+// LOAD_LEVEL=smoke BASE_URL=http://localhost:8080 k6 run scenarios/danajlim/store-add-report-test.js
