@@ -23,7 +23,8 @@
 // | 5 | 가게 상세 진입        | 포함          | GET  | GET /stores/{storeId}                      | Y    | storeId = data.content[0].id              |
 // | 6 | 메뉴 리스트 조회      | 포함          | GET  | GET /stores/{storeId}/menus                | Y    |                                            |
 // | 7 | 메뉴 카테고리 조회    | 포함          | GET  | GET /menu-categories                       | N    | categoryId = data[0].categoryId           |
-// | 8 | 메뉴 추가 제보        | 포함          | POST | POST /stores/{storeId}/menu-add-reports    | Y    | ⚠ 부수효과. 개발 서버 DB                  |
+// | 8 | presigned URL 발급    | mock(S3)      | POST | POST /menu-add-reports/images/presigned-url| Y    | ?mimeType=image/jpeg → awsKey 체이닝      |
+// | 9 | 메뉴 추가 제보        | 포함          | POST | POST /stores/{storeId}/menu-add-reports    | Y    | ⚠ 부수효과. 개발 서버 DB                  |
 
 import { group } from 'k6';
 import { getOptions } from '../../lib/config.js';
@@ -39,7 +40,7 @@ export default function menuAddReportFlow() {
   const { token } = pickToken();
   const loc = pickLocation();
   const q = pickQuery();
-  let storeId, categoryId;
+  let storeId, categoryId, awsKey, fileName;
 
   group('01. 홈화면 진입', () => {
     const res = apiGet('/trend/nearby', {
@@ -97,8 +98,24 @@ export default function menuAddReportFlow() {
   });
   think();
 
-  group('07. 메뉴 추가 제보', () => {
-    if (!storeId || !categoryId) return;
+  group('07. 이미지 presigned URL 발급', () => {
+    if (!storeId) return;
+    const res = apiPost('/menu-add-reports/images/presigned-url', {
+      token,
+      params: { mimeType: 'image/jpeg' },
+      name: 'POST /menu-add-reports/images/presigned-url',
+    });
+    checkOk(res, 'POST /menu-add-reports/images/presigned-url');
+    const data = dataOf(res);
+    if (data) {
+      awsKey = data.awsKey;
+      fileName = data.fileName;
+    }
+  });
+  think();
+
+  group('08. 메뉴 추가 제보', () => {
+    if (!storeId || !categoryId || !awsKey) return;
     const res = apiPost(`/stores/${storeId}/menu-add-reports`, {
       token,
       body: {
@@ -106,7 +123,7 @@ export default function menuAddReportFlow() {
         name: 'loadtest-menu-제보',
         price: 3000,
         description: 'loadtest-description',
-        images: [],
+        images: [{ fileName, awsKey, mimeType: 'image/jpeg' }],
       },
       name: 'POST /stores/{storeId}/menu-add-reports',
     });
