@@ -3,9 +3,9 @@
 // 실토큰은 커밋 금지. tokens.csv 는 .gitignore 대상이며 tokens.sample.csv 만 커밋한다.
 
 import { SharedArray } from 'k6/data';
-import papaparse from 'https://jslib.k6.io/papaparse/5.1.2/index.js';
+import papaparse from './vendor/papaparse.js';
 
-const TOKENS_PATH = __ENV.TOKENS_CSV || './data/tokens.csv';
+const TOKENS_PATH = __ENV.TOKENS_CSV || '../data/tokens.csv';
 
 // SharedArray: 파일을 한 번만 파싱해 모든 VU 가 메모리를 공유한다(수만 행도 안전).
 const tokens = new SharedArray('tokens', function () {

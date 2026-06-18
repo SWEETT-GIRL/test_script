@@ -3,12 +3,12 @@
 // 시나리오는 pickLocation()/pickQuery() 로만 접근한다(하드코딩 금지).
 
 import { SharedArray } from 'k6/data';
-import papaparse from 'https://jslib.k6.io/papaparse/5.1.2/index.js';
+import papaparse from './vendor/papaparse.js';
 
-const LOCATIONS_PATH = __ENV.LOCATIONS_CSV || './data/locations.csv';
-const QUERIES_PATH = __ENV.QUERIES_CSV || './data/search-queries.csv';
-const REGIONS_PATH = __ENV.REGIONS_CSV || './data/regions.csv';
-const REGION_QUERIES_PATH = __ENV.REGION_QUERIES_CSV || './data/region-search-queries.csv';
+const LOCATIONS_PATH = __ENV.LOCATIONS_CSV || '../data/locations.csv';
+const QUERIES_PATH = __ENV.QUERIES_CSV || '../data/search-queries.csv';
+const REGIONS_PATH = __ENV.REGIONS_CSV || '../data/regions.csv';
+const REGION_QUERIES_PATH = __ENV.REGION_QUERIES_CSV || '../data/region-search-queries.csv';
 
 const locations = new SharedArray('locations', function () {
   const parsed = papaparse.parse(open(LOCATIONS_PATH), {

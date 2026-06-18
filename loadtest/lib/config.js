@@ -65,6 +65,7 @@ export function getOptions(scenarioName) {
         maxVUs: profile.maxVUs,
         stages: profile.stages,
         tags: { scenario: scenarioName },
+        gracefulStop: '15s',
       },
     },
     thresholds: THRESHOLDS,
@@ -73,7 +74,5 @@ export function getOptions(scenarioName) {
       scenario: scenarioName,
       load_level: LOAD_LEVEL,
     },
-    // 부하 종료 후 미완료 요청 정리 시간
-    gracefulStop: '15s',
   };
 }
