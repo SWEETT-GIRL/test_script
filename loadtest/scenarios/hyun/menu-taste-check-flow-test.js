@@ -45,6 +45,7 @@ export default function menuTasteCheckFlow() {
   const loc = pickLocation();
   const q = pickQuery();
   let storeId, menuId, reviewId;
+  let storeCandidates = []; // search 결과 id 목록 — 메뉴/리뷰 없는 가게 건너뛰기 위해
 
   group('01. 홈화면 진입', () => {
     const res = apiGet('/trend/nearby', {
@@ -73,7 +74,9 @@ export default function menuTasteCheckFlow() {
     checkOk(res, 'GET /stores/search');
     const data = dataOf(res);
     if (data && Array.isArray(data.content) && data.content.length > 0) {
-      storeId = data.content[0].id;
+      // 상위 5개 후보 저장 — 메뉴/리뷰 없는 가게 건너뛰기 위해
+      storeCandidates = data.content.slice(0, 5).map((c) => c.id);
+      storeId = storeCandidates[0];
     }
   });
   think();
@@ -85,13 +88,19 @@ export default function menuTasteCheckFlow() {
   });
   think();
 
+  // 메뉴 없는 가게는 다음 후보로 이동 (최대 5개 시도)
+  // → OpenSearch가 seed 외 가게를 1등으로 반환해도 체인이 끊기지 않음
   group('05. 메뉴 리스트 조회', () => {
-    if (!storeId) return;
-    const res = apiGet(`/stores/${storeId}/menus`, { token, name: 'GET /stores/{storeId}/menus' });
-    checkOk(res, 'GET /stores/{storeId}/menus');
-    const data = dataOf(res);
-    if (Array.isArray(data) && data.length > 0) {
-      menuId = data[0].menuId;
+    for (let i = 0; i < storeCandidates.length; i++) {
+      const candidateId = storeCandidates[i];
+      const res = apiGet(`/stores/${candidateId}/menus`, { token, name: 'GET /stores/{storeId}/menus' });
+      checkOk(res, 'GET /stores/{storeId}/menus');
+      const data = dataOf(res);
+      if (Array.isArray(data) && data.length > 0) {
+        storeId = candidateId; // 메뉴 있는 가게로 storeId 갱신
+        menuId = data[0].menuId;
+        break;
+      }
     }
   });
   think();
