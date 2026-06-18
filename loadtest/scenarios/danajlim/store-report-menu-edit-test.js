@@ -105,7 +105,7 @@ export default function storeReportMenuEdit() {
     // 응답: ApiResponse<SliceResponse<StoreSearchResponse>> → data.content[].id
     const data = dataOf(res);
     if (data && Array.isArray(data.content) && data.content.length > 0) {
-      storeId = data.content[0].id;
+      storeId = data.content[__ITER % data.content.length].id;
     }
   });
   think();
@@ -140,9 +140,10 @@ export default function storeReportMenuEdit() {
 
     // 응답: ApiResponse<List<StoreMenuResponse>> → 첫 메뉴를 수정 대상으로 선택(menuId, price)
     const menus = dataOf(res);
-    if (Array.isArray(menus) && menus.length > 0 && menus[0]) {
-      menuId = menus[0].menuId;
-      if (typeof menus[0].price === 'number') currentPrice = menus[0].price;
+    if (Array.isArray(menus) && menus.length > 0) {
+      const menu = menus[__ITER % menus.length];
+      menuId = menu.menuId;
+      if (typeof menu.price === 'number') currentPrice = menu.price;
       // 삭제 제안 이미지 = store 상세 menuImages 중 이 메뉴 소유 첫 이미지(FE 와 동일 소스)
       const owned = menuImages.find((im) => im && im.menuId === menuId);
       if (owned) deleteImageId = owned.id;
