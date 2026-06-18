@@ -18,12 +18,13 @@
 // | 3 | 가게 상세 진입      | 포함          | GET  | GET /stores/{storeId}       | Y    | 2번 체이닝                          |
 // | 4 | 메뉴 리스트 조회    | 포함          | GET  | GET /stores/{storeId}/menus | Y    | menuId = data[0].menuId            |
 // | 5 | 메뉴 좋아요         | 포함          | POST | POST /menus/{menuId}/like   | Y    | ⚠ 부수효과. 개발 서버 DB          |
+// | 6 | 메뉴 좋아요 취소    | 포함(cleanup) | DELETE | DELETE /menus/{menuId}/like | Y  | iteration 종료 전 상태 복원        |
 
 import { group } from 'k6';
 import { getOptions } from '../../lib/config.js';
 import { pickToken } from '../../lib/auth.js';
 import { pickLocation } from '../../lib/data.js';
-import { apiGet, apiPost, dataOf } from '../../lib/http.js';
+import { apiGet, apiPost, apiDelete, dataOf } from '../../lib/http.js';
 import { checkOk } from '../../lib/checks.js';
 import { think } from '../../lib/think.js';
 
@@ -73,6 +74,11 @@ export default function menuLikeFlow() {
       name: 'POST /menus/{menuId}/like',
     });
     checkOk(res, 'POST /menus/{menuId}/like');
+  });
+
+  group('05. 메뉴 좋아요 취소', () => {
+    if (!menuId) return;
+    apiDelete(`/menus/${menuId}/like`, { token, name: 'DELETE /menus/{menuId}/like' });
   });
 }
 

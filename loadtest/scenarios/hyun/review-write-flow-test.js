@@ -27,13 +27,14 @@
 // | 7 | 메뉴 상세 조회        | 포함          | GET  | GET /menus/{menuId}                 | Y    | 6번 체이닝                          |
 // | 8 | 리뷰 요약 조회        | 포함          | GET  | GET /menus/{menuId}/reviews/summary | Y    | previewSize=2                       |
 // | 9 | presigned URL 발급    | mock(S3)      | POST | POST /reviews/images/presigned-urls | Y    | BE가 S3 mock 처리                   |
-// |10 | 리뷰 작성             | 포함          | POST | POST /menus/{menuId}/reviews        | Y    | ⚠ 부수효과. 개발 서버 DB           |
+// |10 | 리뷰 작성             | 포함          | POST   | POST /menus/{menuId}/reviews          | Y    | ⚠ 부수효과. 개발 서버 DB. reviewId 체이닝 |
+// |11 | 리뷰 삭제             | 포함(cleanup) | DELETE | DELETE /reviews/{reviewId}            | Y    | iteration 종료 전 상태 복원               |
 
 import { group } from 'k6';
 import { getOptions } from '../../lib/config.js';
 import { pickToken } from '../../lib/auth.js';
 import { pickLocation, pickQuery } from '../../lib/data.js';
-import { apiGet, apiPost, dataOf } from '../../lib/http.js';
+import { apiGet, apiPost, apiDelete, dataOf } from '../../lib/http.js';
 import { checkOk } from '../../lib/checks.js';
 import { think } from '../../lib/think.js';
 
@@ -43,7 +44,7 @@ export default function reviewWriteFlow() {
   const { token } = pickToken();
   const loc = pickLocation();
   const q = pickQuery();
-  let storeId, menuId;
+  let storeId, menuId, reviewId;
 
   group('01. 검색어 자동완성', () => {
     const res = apiGet('/stores/autocomplete', {
@@ -130,6 +131,13 @@ export default function reviewWriteFlow() {
       name: 'POST /menus/{menuId}/reviews',
     });
     checkOk(res, 'POST /menus/{menuId}/reviews');
+    const data = dataOf(res);
+    if (data) reviewId = data.id;
+  });
+
+  group('09. 리뷰 삭제', () => {
+    if (!reviewId) return;
+    apiDelete(`/reviews/${reviewId}`, { token, name: 'DELETE /reviews/{reviewId}' });
   });
 }
 

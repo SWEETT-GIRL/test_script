@@ -27,13 +27,14 @@
 // | 7 | 메뉴 상세 조회        | 포함          | GET  | GET /menus/{menuId}                 | Y    | 6번 체이닝                              |
 // | 8 | 리뷰 요약 조회        | 포함          | GET  | GET /menus/{menuId}/reviews/summary | Y    | previewSize=2                           |
 // | 9 | 리뷰 리스트 스크롤    | 포함          | GET  | GET /menus/{menuId}/reviews         | Y    | reviewId = data.content[0].id          |
-// |10 | 도움돼요              | 포함          | POST | POST /reviews/{reviewId}/recommend  | Y    | ⚠ 부수효과. 개발 서버 DB              |
+// |10 | 도움돼요              | 포함          | POST   | POST /reviews/{reviewId}/recommend    | Y    | ⚠ 부수효과. 개발 서버 DB              |
+// |11 | 도움돼요 취소         | 포함(cleanup) | DELETE | DELETE /reviews/{reviewId}/recommend  | Y    | iteration 종료 전 상태 복원            |
 
 import { group } from 'k6';
 import { getOptions } from '../../lib/config.js';
 import { pickToken } from '../../lib/auth.js';
 import { pickLocation, pickQuery } from '../../lib/data.js';
-import { apiGet, apiPost, dataOf } from '../../lib/http.js';
+import { apiGet, apiPost, apiDelete, dataOf } from '../../lib/http.js';
 import { checkOk } from '../../lib/checks.js';
 import { think } from '../../lib/think.js';
 
@@ -135,6 +136,11 @@ export default function menuTasteCheckFlow() {
       name: 'POST /reviews/{reviewId}/recommend',
     });
     checkOk(res, 'POST /reviews/{reviewId}/recommend');
+  });
+
+  group('10. 도움돼요 취소', () => {
+    if (!reviewId) return;
+    apiDelete(`/reviews/${reviewId}/recommend`, { token, name: 'DELETE /reviews/{reviewId}/recommend' });
   });
 }
 
