@@ -193,11 +193,26 @@ class TestRunner {
 		assertThat(r.statusCode, is(200))
 
 		try {
-			def parsed  = new JsonSlurper().parseText(r.getText())
-			def content = parsed?.data?.content
+			String body = r.getText()
+			def parsed  = new JsonSlurper().parseText(body)
+
+			// 응답 구조 후보를 순서대로 시도
+			def content = parsed?.data?.content        // Spring Page 형태
 			if (content == null) content = parsed?.data?.stores
+			if (content == null && parsed?.data instanceof List) content = parsed.data
+
 			if (content != null && content.size() > 0) {
-				storeId = content[0].storeId as long
+				def first = content[0]
+				// storeId 필드명 후보
+				if (first?.storeId != null)   storeId = first.storeId as long
+				else if (first?.store_id != null) storeId = first.store_id as long
+				else if (first?.id != null)   storeId = first.id as long
+			}
+
+			// storeId 미추출 시 응답 앞 200자 로그 → nGrinder 로그에서 실제 구조 확인
+			if (storeId < 0) {
+				String preview = body.length() > 200 ? body.substring(0, 200) : body
+				grinder.logger.warn("storeId not found. body preview: " + preview)
 			}
 		} catch (Exception e) {
 			grinder.logger.warn("searchStore parse fail " + e.message)
