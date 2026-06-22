@@ -1,12 +1,14 @@
 // nGrinder 부하 스크립트 — [가게 상세] 메뉴 카테고리 필터 (소금빵)
-//   홈화면 → 가게 검색 → 상세+전체메뉴 → 소금빵 필터 → 필터 해제(전체)
+//   홈화면 → 가게 검색 → 상세+전체메뉴 → 소금빵 필터(카테고리 목록 조회)
 //
 // 구조 메모:
 //   - home()              : 좌표 → mock(coord2regioncode) → 구_동 → BE /trend/select
-//   - searchStore()       : search-queries.csv 키워드 → /stores/search → storeId 추출
+//   - searchStore()       : search-queries.csv 키워드 → /stores/search?sort=popularity → storeId 추출
+//                           응답: { data: { content: [ { id, name, ... } ], hasNext } }
 //   - storeDetail()       : /stores/{storeId} + /stores/{storeId}/menus (전체)
-//   - filterSogeumppang() : /menu-categories → 소금빵 categoryId → /stores/{storeId}/menus?categoryId
-//   - allMenus()          : /stores/{storeId}/menus (필터 해제, 전체 다시)
+//   - filterSogeumppang() : /menu-categories 조회 (필터 칩 렌더링용)
+//                           ※ /stores/{storeId}/menus 는 서버사이드 카테고리 필터 미지원
+//                              → 카테고리 필터는 클라이언트에서 처리, 추가 API 호출 없음
 //
 // ※ /stores/search 의 위경도 파라미터명은 lon (lng 아님)
 //
@@ -37,7 +39,6 @@ class TestRunner {
 	public static GTest tSearch
 	public static GTest tStoreDetail
 	public static GTest tFilterMenu
-	public static GTest tAllMenus
 	public static HTTPRequest request
 	public static HTTPRequest mockRequest
 
@@ -52,7 +53,6 @@ class TestRunner {
 		tSearch      = new GTest(2, "02 search-store")
 		tStoreDetail = new GTest(3, "03 store-detail")
 		tFilterMenu  = new GTest(4, "04 filter-sogeumppang")
-		tAllMenus    = new GTest(5, "05 all-menus")
 		request     = new HTTPRequest()
 		mockRequest = new HTTPRequest()
 		loadData()
@@ -107,7 +107,6 @@ class TestRunner {
 		tSearch.record(this, "searchStore")
 		tStoreDetail.record(this, "storeDetail")
 		tFilterMenu.record(this, "filterSogeumppang")
-		tAllMenus.record(this, "allMenus")
 		grinder.statistics.delayReports = true
 	}
 
@@ -183,36 +182,21 @@ class TestRunner {
 		double lat = (double) loc.get(0)
 		double lon = (double) loc.get(1)
 
-		NVPair[] params = new NVPair[5]
+		NVPair[] params = new NVPair[6]
 		params[0] = new NVPair("query", q)
 		params[1] = new NVPair("lat",   String.valueOf(lat))
 		params[2] = new NVPair("lon",   String.valueOf(lon))  // ※ lon
 		params[3] = new NVPair("page",  "0")
 		params[4] = new NVPair("size",  "15")
+		params[5] = new NVPair("sort",  "popularity")
 		HTTPResponse r = request.GET(BASE + "/stores/search", params, authHeaders())
 		assertThat(r.statusCode, is(200))
 
 		try {
-			String body = r.getText()
-			def parsed  = new JsonSlurper().parseText(body)
-
-			// 응답 구조 후보를 순서대로 시도
-			def content = parsed?.data?.content        // Spring Page 형태
-			if (content == null) content = parsed?.data?.stores
-			if (content == null && parsed?.data instanceof List) content = parsed.data
-
+			// 실제 응답: { data: { content: [ { id: 75, ... }, ... ], hasNext: true } }
+			def content = new JsonSlurper().parseText(r.getText())?.data?.content
 			if (content != null && content.size() > 0) {
-				def first = content[0]
-				// storeId 필드명 후보
-				if (first?.storeId != null)   storeId = first.storeId as long
-				else if (first?.store_id != null) storeId = first.store_id as long
-				else if (first?.id != null)   storeId = first.id as long
-			}
-
-			// storeId 미추출 시 응답 앞 200자 로그 → nGrinder 로그에서 실제 구조 확인
-			if (storeId < 0) {
-				String preview = body.length() > 200 ? body.substring(0, 200) : body
-				grinder.logger.warn("storeId not found. body preview: " + preview)
+				storeId = content[0].id as long
 			}
 		} catch (Exception e) {
 			grinder.logger.warn("searchStore parse fail " + e.message)
@@ -237,45 +221,13 @@ class TestRunner {
 	// ──────────────────────────────────────────────────────────────────────────
 	// 04 filterSogeumppang: /menu-categories → 소금빵 categoryId → /stores/{storeId}/menus?categoryId
 	// ──────────────────────────────────────────────────────────────────────────
+	// ──────────────────────────────────────────────────────────────────────────
+	// 04 filterSogeumppang: /menu-categories 조회 (필터 칩 렌더링)
+	//    카테고리 필터는 클라이언트 처리 → 추가 menus 호출 없음
+	// ──────────────────────────────────────────────────────────────────────────
 	public void filterSogeumppang() {
-		if (storeId < 0) return
-
-		long categoryId = -1L
-		try {
-			NVPair[] none  = new NVPair[0]
-			HTTPResponse cr = request.GET(BASE + "/menu-categories", none, authHeaders())
-			assertThat(cr.statusCode, is(200))
-			def cats = new JsonSlurper().parseText(cr.getText())?.data
-			if (cats != null) {
-				for (cat in cats) {
-					if ("소금빵".equals(cat?.name)) {
-						categoryId = cat.categoryId as long
-						break
-					}
-				}
-			}
-		} catch (Exception e) {
-			grinder.logger.warn("menu-categories fail " + e.message)
-		}
-
-		if (categoryId < 0) {
-			grinder.logger.warn("소금빵 category not found, skip filter")
-			return
-		}
-
-		NVPair[] params = new NVPair[1]
-		params[0] = new NVPair("categoryId", String.valueOf(categoryId))
-		HTTPResponse r  = request.GET(BASE + "/stores/" + storeId + "/menus", params, authHeaders())
-		assertThat(r.statusCode, is(200))
-	}
-
-	// ──────────────────────────────────────────────────────────────────────────
-	// 05 allMenus: 필터 해제 → /stores/{storeId}/menus (전체 다시)
-	// ──────────────────────────────────────────────────────────────────────────
-	public void allMenus() {
-		if (storeId < 0) return
 		NVPair[] none  = new NVPair[0]
-		HTTPResponse r = request.GET(BASE + "/stores/" + storeId + "/menus", none, authHeaders())
+		HTTPResponse r = request.GET(BASE + "/menu-categories", none, authHeaders())
 		assertThat(r.statusCode, is(200))
 	}
 
@@ -289,7 +241,5 @@ class TestRunner {
 		grinder.sleep(1200)
 		filterSogeumppang()
 		grinder.sleep(800)
-		allMenus()
-		grinder.sleep(500)
 	}
 }
