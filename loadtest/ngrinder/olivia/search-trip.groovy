@@ -170,7 +170,7 @@ class TestRunner {
 			if (stores == null) stores = parsed?.data?.content
 			if (stores != null) {
 				for (s in stores) {
-					if (s?.storeId != null) ids.add(s.storeId as long)
+					if (s?.id != null) ids.add(s.id as long)
 				}
 			}
 		} catch (Exception e) {
